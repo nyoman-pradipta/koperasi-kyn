@@ -37,3 +37,6 @@ Thumbs.db
 # PM2 & logs
 logs/
 *.log
+
+# codegraph
+.codegraph/
