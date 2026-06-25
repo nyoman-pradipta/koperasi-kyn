@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Database — dikelola di VPS via volume Docker, tidak disimpan di repo
+koperasi.db
+*.db
+*.sqlite3
+
+# File upload anggota (KTP, dokumen jaminan) — tidak masuk repo
+uploads/
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Claude Code local config
+.claude/
+
+# PM2 & logs
+logs/
+*.log

@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    container_name: koperasi-kyn
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    volumes:
+      # Database & uploads di-persist di luar container
+      - ./data/koperasi.db:/app/koperasi.db
+      - ./data/uploads:/app/uploads
+    environment:
+      - APP_ENV=production

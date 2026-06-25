@@ -1,0 +1,43 @@
+:root {
+  --primary: #1e6f3e;
+  --primary-dark: #155a31;
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --accent: #fffbeb;
+  --accent-border: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Saat mencetak Laporan: sembunyikan sidebar/topbar & elemen .no-print,
+   biarkan hanya area laporan yang tercetak. */
+@media print {
+  .sidebar,
+  .topbar,
+  .no-print {
+    display: none !important;
+  }
+  .content {
+    padding: 0 !important;
+  }
+  .card {
+    border: none !important;
+  }
+}
