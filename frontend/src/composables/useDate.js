@@ -17,8 +17,17 @@ const LOCALE = 'id-ID'
  * yang tidak memiliki informasi zona waktu menjadi UTC eksplisit (tambah 'Z').
  */
 function parseUTC(value) {
-  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value)) {
-    return new Date(value + 'Z')
+  if (!value) return new Date()
+  
+  if (typeof value === 'string') {
+    // Jika hanya YYYY-MM-DD, tambahkan T00:00:00Z
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return new Date(value + 'T00:00:00Z')
+    }
+    // Jika tidak ada Z atau offset timezone, asumsikan dari backend adalah UTC
+    if (!/(Z|[+-]\d{2}:\d{2})$/.test(value)) {
+      return new Date(value + 'Z')
+    }
   }
   return new Date(value)
 }
@@ -34,14 +43,12 @@ export function fmtDateTime(value) {
   const d = parseUTC(value)
   if (isNaN(d)) return String(value)
   
-  // Jika waktu aslinya adalah tepat tengah malam (00:00:00 UTC),
-  // yang sering kali berasal dari kolom bertipe Date (bukan DateTime) di database,
-  // maka sembunyikan jamnya untuk mencegah kebingungan (07:00 WIB).
-  const isMidnightUTC = 
-    (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) || // YYYY-MM-DD
-    (typeof value === 'string' && value.includes('T00:00:00'));
+  // Jika waktu aslinya adalah tepat tengah malam (00:00:00 UTC)
+  // Sembunyikan jamnya untuk mencegah kebingungan (07:00 WIB).
+  const isDateOnly = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const hasZeroTime = typeof value === 'string' && value.includes('T00:00:00');
     
-  if (isMidnightUTC) {
+  if (isDateOnly || hasZeroTime) {
     return d.toLocaleDateString(LOCALE, {
       day: 'numeric',
       month: 'short',

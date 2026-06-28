@@ -35,8 +35,20 @@ def record_cash(
     balance = current_balance(db)
     balance = balance + amount if direction == "in" else balance - amount
 
+    if tx_date is None:
+        final_date = datetime.utcnow()
+    elif isinstance(tx_date, datetime):
+        final_date = tx_date
+    elif isinstance(tx_date, date):
+        if tx_date == date.today():
+            final_date = datetime.utcnow()
+        else:
+            final_date = datetime(tx_date.year, tx_date.month, tx_date.day, 0, 0, 0)
+    else:
+        final_date = datetime.utcnow()
+
     tx = CashTransaction(
-        transaction_date=tx_date or datetime.utcnow(),
+        transaction_date=final_date,
         direction=direction,
         category=category,
         amount=amount,

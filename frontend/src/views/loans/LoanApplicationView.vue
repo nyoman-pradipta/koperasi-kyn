@@ -135,9 +135,7 @@ async function save(submitAfter) {
         for (const f of colFiles.value) {
           const fd = new FormData()
           fd.append('file', f)
-          await client.post(`/collaterals/${col.id}/upload`, fd, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          })
+          await client.post(`/collaterals/${col.id}/upload`, fd)
         }
         await client.post(`/collaterals/${col.id}/attach/${loan.id}`)
       }

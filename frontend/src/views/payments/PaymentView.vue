@@ -133,7 +133,7 @@ onMounted(loadLoans)
       <template #footer>
         <button class="btn ghost" @click="printReceipt(receipt, '58mm')">🖨 Thermal 58mm</button>
         <button class="btn ghost" @click="printReceipt(receipt, 'a4')">🖨 A4 / PDF</button>
-        <button class="btn" @click="shareWhatsApp(receipt)">📲 WhatsApp</button>
+        <button class="btn" :disabled="!receipt.member_phone" @click="shareWhatsApp(receipt)">📲 WhatsApp</button>
       </template>
     </BaseModal>
   </div>

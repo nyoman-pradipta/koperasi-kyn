@@ -158,9 +158,7 @@ async function uploadNewDoc() {
     const fd = new FormData()
     fd.append('document_type', newDocType.value)
     fd.append('file', newDocFile.value)
-    await client.post(`/collaterals/${loan.value.collateral.id}/documents`, fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    await client.post(`/collaterals/${loan.value.collateral.id}/documents`, fd)
     ui.notify('Dokumen berhasil diupload')
     showUpload.value = false
     newDocFile.value = null
@@ -210,9 +208,7 @@ async function kembalikanJaminan() {
     fd.append('return_date',      returnForm.value.return_date)
     if (returnForm.value.return_notes) fd.append('return_notes', returnForm.value.return_notes)
     if (returnProof.value) fd.append('proof', returnProof.value)
-    await client.post(`/collaterals/${col.id}/return`, fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    await client.post(`/collaterals/${col.id}/return`, fd)
     ui.notify('Dokumen jaminan berhasil dikembalikan')
     closeReturnModal()
     await load()
@@ -421,11 +417,11 @@ onMounted(load)
         <table class="hist-tbl">
           <thead>
             <tr>
-              <th>Bukti Serah Terima</th>
               <th>Tgl Kembali</th>
               <th>Diterima Oleh</th>
               <th>Petugas</th>
               <th>Catatan</th>
+              <th>Bukti Serah Terima</th>
             </tr>
           </thead>
           <tbody>
