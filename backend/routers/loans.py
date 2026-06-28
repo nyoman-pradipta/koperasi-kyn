@@ -144,7 +144,7 @@ def create_loan(payload: LoanCreate, db: Session = Depends(get_db)):
 
     uid = _actor(db)
     loan_data = payload.model_dump()
-    loan_data["requires_collateral"] = requires_col
+    loan_data["requires_collateral"] = 1 if requires_col else 0
 
     loan = Loan(
         loan_number=next_number(db, "loan"),
@@ -185,7 +185,9 @@ def update_loan(loan_id: int, payload: LoanUpdate, db: Session = Depends(get_db)
         setattr(loan, field, value)
         
     if loan.principal_amount > max_no_col:
-        loan.requires_collateral = True
+        loan.requires_collateral = 1
+    elif "requires_collateral" in payload.model_dump(exclude_unset=True):
+        loan.requires_collateral = 1 if payload.requires_collateral else 0
     _apply_calculations(loan)
     db.commit()
     db.refresh(loan)
