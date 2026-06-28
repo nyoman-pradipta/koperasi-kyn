@@ -9,7 +9,7 @@ const items      = ref([])
 const coopName   = ref('')
 const loading    = ref(false)
 const daysAhead  = ref(30)
-const sentSet    = ref(new Set())
+const sentIds    = ref([])
 
 const DAYS_OPTIONS = [
   { label: '7 hari ke depan',  value: 7 },
@@ -29,13 +29,13 @@ async function load() {
     coopName.value = data.coop_name
     items.value    = data.items
     const today = new Date().toISOString().slice(0, 10)
-    const fresh = new Set()
+    const fresh = []
     for (const it of data.items) {
       if (it.last_sent_at && it.last_sent_at.startsWith(today)) {
-        fresh.add(it.schedule_id)
+        fresh.push(it.schedule_id)
       }
     }
-    sentSet.value = fresh
+    sentIds.value = fresh
   } catch {
     ui.notify('Gagal memuat data pengingat', 'error')
   } finally {
@@ -50,7 +50,11 @@ async function send(item) {
   }
   const url = `https://wa.me/${item.wa_phone}?text=${encodeURIComponent(item.wa_message)}`
   window.open(url, '_blank')
-  sentSet.value = new Set([...sentSet.value, item.schedule_id])
+  
+  if (!sentIds.value.includes(item.schedule_id)) {
+    sentIds.value.push(item.schedule_id)
+  }
+  
   try {
     await client.post(
       `/reminders/log?schedule_id=${item.schedule_id}&member_id=${item.member_id}&loan_id=${item.loan_id}&phone=${encodeURIComponent(item.wa_phone)}`
@@ -108,7 +112,7 @@ onMounted(load)
         <div class="sum-lbl">Sudah Lewat Jatuh Tempo</div>
       </div>
       <div class="sum-card ok">
-        <div class="sum-num">{{ sentSet.size }}</div>
+        <div class="sum-num">{{ sentIds.length }}</div>
         <div class="sum-lbl">Sudah Dikirim Hari Ini</div>
       </div>
       <div class="sum-card muted">
@@ -142,7 +146,7 @@ onMounted(load)
             <tr
               v-for="it in items"
               :key="it.schedule_id"
-              :class="{ 'row-overdue': it.is_overdue, 'row-sent': sentSet.has(it.schedule_id) }"
+              :class="{ 'row-overdue': it.is_overdue, 'row-sent': sentIds.includes(it.schedule_id) }"
             >
               <td class="td-name">{{ it.member_name }}</td>
               <td>
@@ -163,7 +167,7 @@ onMounted(load)
                 </span>
               </td>
               <td class="td-sent">
-                <span v-if="sentSet.has(it.schedule_id)" class="sent-tag">✓ Hari ini</span>
+                <span v-if="sentIds.includes(it.schedule_id)" class="sent-tag">✓ Hari ini</span>
                 <span v-else-if="it.last_sent_at" class="old-sent">{{ formatDt(it.last_sent_at) }}</span>
                 <span v-else class="muted-txt">—</span>
               </td>
@@ -181,12 +185,12 @@ onMounted(load)
                   <!-- Kirim WA -->
                   <button
                     class="wa-btn"
-                    :class="{ sent: sentSet.has(it.schedule_id), 'no-hp': !it.has_phone }"
+                    :class="{ sent: sentIds.includes(it.schedule_id), 'no-hp': !it.has_phone }"
                     :disabled="!it.has_phone"
                     :title="it.has_phone ? `Kirim ke ${it.phone}` : 'Tidak ada nomor HP'"
                     @click="send(it)"
                   >
-                    {{ sentSet.has(it.schedule_id) ? '✓ Terkirim' : '📱 Kirim WA' }}
+                    {{ sentIds.includes(it.schedule_id) ? '✓ Terkirim' : '📱 Kirim WA' }}
                   </button>
                 </div>
               </td>
