@@ -1,14 +1,10 @@
-"""Router Pengaturan (Modul 11): get/update setting key-value + backup DB."""
-
-import sqlite3
-import tempfile
-from pathlib import Path
+"""Router Pengaturan (Modul 11): get/update setting key-value."""
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from ..database import get_db, DB_PATH
+from ..database import get_db
 from ..models import Setting
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -35,18 +31,9 @@ def update_settings(payload: dict[str, str], db: Session = Depends(get_db)):
 
 @router.get("/backup")
 def backup_db():
-    """Unduh file koperasi.db untuk dicadangkan (online backup via sqlite3.backup)."""
-    tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-    tmp.close()
-    src = sqlite3.connect(str(DB_PATH))
-    dst = sqlite3.connect(tmp.name)
-    try:
-        src.backup(dst)
-    finally:
-        dst.close()
-        src.close()
-    return FileResponse(
-        path=tmp.name,
-        filename="koperasi-backup.db",
-        media_type="application/octet-stream",
+    """Backup dilakukan langsung dari Supabase Dashboard."""
+    return JSONResponse(
+        {"message": "Backup database bisa dilakukan dari Supabase Dashboard."},
+        status_code=200,
     )
+
