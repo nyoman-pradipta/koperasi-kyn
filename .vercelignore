@@ -1,0 +1,8 @@
+frontend
+uploads
+venv
+.idea
+.git
+.vscode
+__pycache__
+*.pyc
