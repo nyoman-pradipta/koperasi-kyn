@@ -28,10 +28,10 @@ async function load() {
     })
     coopName.value = data.coop_name
     items.value    = data.items
-    const today = new Date().toISOString().slice(0, 10)
+    const serverToday = data.today || new Date().toISOString().slice(0, 10)
     const fresh = []
     for (const it of data.items) {
-      if (it.last_sent_at && it.last_sent_at.startsWith(today)) {
+      if (it.last_sent_at && it.last_sent_at.startsWith(serverToday)) {
         fresh.push(it.schedule_id)
       }
     }
@@ -57,9 +57,12 @@ async function send(item) {
   
   try {
     await client.post(
-      `/reminders/log?schedule_id=${item.schedule_id}&member_id=${item.member_id}&loan_id=${item.loan_id}&phone=${encodeURIComponent(item.wa_phone)}`
+      `/reminders/log?schedule_id=${item.schedule_id}&member_id=${item.member_id}&loan_id=${item.loan_id}&phone=${encodeURIComponent(item.wa_phone)}`,
+      {}
     )
-  } catch { /* log failure is non-critical */ }
+  } catch (err) {
+    ui.notify(`Log gagal: ${err.message}`, 'error')
+  }
 }
 
 
