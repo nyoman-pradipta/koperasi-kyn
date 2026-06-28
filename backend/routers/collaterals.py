@@ -13,6 +13,7 @@ from ..models import Collateral, CollateralDocument, CollateralReturnHistory, Co
 from ..schemas import CollateralCreate, CollateralUpdate, CollateralOut, ReturnCollateralRequest
 from ..services.activity import log_activity
 from ..services.security import current_user_id_ctx
+from ..services.storage import upload_file
 
 router = APIRouter(prefix="/api/collaterals", tags=["collaterals"])
 
@@ -85,7 +86,7 @@ def update_collateral(col_id: int, payload: CollateralUpdate, db: Session = Depe
 
 
 @router.post("/{col_id}/upload", response_model=CollateralOut)
-async def upload_file(
+async def upload_file_endpoint(
     col_id: int,
     document_type: str = Form("Dokumen Jaminan"),
     file: UploadFile = File(...),
@@ -95,26 +96,14 @@ async def upload_file(
     if not c:
         raise HTTPException(404, detail="Jaminan tidak ditemukan")
 
-    COL_DIR.mkdir(parents=True, exist_ok=True)
     original_name = file.filename or "file"
-    ext = Path(original_name).suffix.lower()
-    if ext not in {".jpg", ".jpeg", ".png", ".pdf"}:
-        raise HTTPException(400, detail="Format file harus JPG/JPEG/PNG/PDF")
-
-    stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
-    stored_name = f"col_{col_id}_{stamp}{ext}"
-    dest = COL_DIR / stored_name
-    content = await file.read()
-    if len(content) > 10 * 1024 * 1024:
-        raise HTTPException(400, detail="Ukuran file maksimal 10 MB")
-    dest.write_bytes(content)
-
-    rel_path = f"uploads/collaterals/{stored_name}"
+    file_url = upload_file(file, "collaterals")
+    
     mime, _ = mimetypes.guess_type(original_name)
 
     # Tetap update file_paths JSON untuk backward-compat
     paths = json.loads(c.file_paths or "[]")
-    paths.append(rel_path)
+    paths.append(file_url)
     c.file_paths = json.dumps(paths)
 
     # Simpan ke tabel collateral_documents (sumber kebenaran baru)
@@ -122,10 +111,10 @@ async def upload_file(
         collateral_id=col_id,
         document_type=document_type,
         original_filename=original_name,
-        stored_filename=stored_name,
-        file_path=rel_path,
+        stored_filename=original_name,
+        file_path=file_url,
         mime_type=mime,
-        file_size=len(content),
+        file_size=file.size if hasattr(file, 'size') else 0,
         created_by=current_user_id_ctx.get(None),
     ))
     db.commit()
@@ -173,36 +162,24 @@ async def upload_document_typed(
     if not c:
         raise HTTPException(404, detail="Jaminan tidak ditemukan")
 
-    COL_DIR.mkdir(parents=True, exist_ok=True)
     original_name = file.filename or "file"
-    ext = Path(original_name).suffix.lower()
-    if ext not in {".jpg", ".jpeg", ".png", ".pdf"}:
-        raise HTTPException(400, detail="Format file harus JPG/JPEG/PNG/PDF")
-
-    stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
-    stored_name = f"col_{col_id}_{stamp}{ext}"
-    dest = COL_DIR / stored_name
-    content = await file.read()
-    if len(content) > 10 * 1024 * 1024:
-        raise HTTPException(400, detail="Ukuran file maksimal 10 MB")
-    dest.write_bytes(content)
-
-    rel_path = f"uploads/collaterals/{stored_name}"
+    file_url = upload_file(file, "collaterals")
+    
     mime, _ = mimetypes.guess_type(original_name)
 
     # Update file_paths JSON juga
     paths = json.loads(c.file_paths or "[]")
-    paths.append(rel_path)
+    paths.append(file_url)
     c.file_paths = json.dumps(paths)
 
     doc = CollateralDocument(
         collateral_id=col_id,
         document_type=document_type,
         original_filename=original_name,
-        stored_filename=stored_name,
-        file_path=rel_path,
+        stored_filename=original_name,
+        file_path=file_url,
         mime_type=mime,
-        file_size=len(content),
+        file_size=file.size if hasattr(file, 'size') else 0,
         created_by=current_user_id_ctx.get(None),
     )
     db.add(doc)
@@ -284,12 +261,7 @@ async def return_collateral(
 
     proof_path = None
     if proof and proof.filename:
-        COL_DIR.mkdir(parents=True, exist_ok=True)
-        ext = Path(proof.filename).suffix.lower()
-        stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
-        dest = COL_DIR / f"return_{col_id}_{stamp}{ext}"
-        dest.write_bytes(await proof.read())
-        proof_path = f"uploads/collaterals/{dest.name}"
+        proof_path = upload_file(proof, "collaterals")
 
     ret_date = date.fromisoformat(return_date) if return_date else date.today()
     uid = current_user_id_ctx.get(None)

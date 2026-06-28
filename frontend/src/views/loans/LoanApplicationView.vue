@@ -278,7 +278,7 @@ onMounted(() => {
                   <span>Foto Dokumen</span>
                   <div class="file-chips">
                     <a v-for="(p, i) in JSON.parse(selectedCol.file_paths)" :key="i"
-                       :href="'/' + p" target="_blank" class="chip">📎 File {{ i + 1 }}</a>
+                       :href="p.startsWith('http') ? p : '/' + p" target="_blank" class="chip">📎 File {{ i + 1 }}</a>
                   </div>
                 </div>
               </div>

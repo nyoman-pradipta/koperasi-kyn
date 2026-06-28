@@ -303,6 +303,8 @@ def loan_schedule(loan_id: int, db: Session = Depends(get_db)):
     ]
 
 
+from ..services.storage import upload_file
+
 @router.post("/{loan_id}/documents")
 async def upload_document(
     loan_id: int,
@@ -314,16 +316,12 @@ async def upload_document(
     if not loan:
         raise HTTPException(404, detail="Pinjaman tidak ditemukan")
 
-    DOC_DIR.mkdir(parents=True, exist_ok=True)
-    ext = Path(file.filename or "").suffix
-    stamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    dest = DOC_DIR / f"loan_{loan_id}_{stamp}{ext}"
-    dest.write_bytes(await file.read())
+    file_url = upload_file(file, "loan_docs")
 
     doc = LoanDocument(
         loan_id=loan_id,
         doc_type=doc_type,
-        file_path=f"uploads/loan_docs/{dest.name}",
+        file_path=file_url,
     )
     db.add(doc)
     db.commit()

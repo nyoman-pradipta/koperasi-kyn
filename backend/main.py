@@ -1,14 +1,8 @@
 """
 Entry-point aplikasi Koperasi (FastAPI).
 
-Server tunggal ini melakukan dua hal:
-  1. Menyediakan REST API di bawah prefix `/api`.
-  2. Menyajikan hasil build frontend Vue (folder `frontend/dist`) sebagai
-     static files. Jadi saat produksi / dipindahkan, user cukup menjalankan
-     SATU server ini.
-
-Saat development (frontend/dist belum ada), API tetap jalan dan endpoint
-root memberi petunjuk untuk menjalankan Vite dev server.
+Server ini hanya menyediakan REST API di bawah prefix `/api`.
+Frontend dihosting secara terpisah di Vercel.
 """
 
 from contextlib import asynccontextmanager
@@ -46,7 +40,6 @@ from .services.security import current_user_id_ctx
 AUTH_WHITELIST = {"/api/health", "/api/auth/login"}
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DIST_DIR = PROJECT_ROOT / "frontend" / "dist"
 UPLOADS_DIR = PROJECT_ROOT / "uploads"
 
 
@@ -65,11 +58,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Koperasi Simpan Pinjam", version="1.0.0", lifespan=lifespan)
 
-# CORS dibutuhkan hanya saat dev (Vite di :5173 memanggil API di :8000).
-# Di produksi same-origin sehingga tidak berpengaruh.
+# Izinkan semua origin agar Vercel dapat mengakses API ini.
+# Untuk produksi lebih ketat, ganti ["*"] dengan URL frontend Vercel Anda.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -153,21 +147,14 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 
-# ------------------- Static frontend (produksi) ----------------------------
+# ------------------- Root Endpoint ----------------------------
 
-if DIST_DIR.exists():
-    # html=True => otomatis melayani index.html dan fallback SPA.
-    # Mount di "/" dilakukan PALING AKHIR agar route /api/* tetap menang.
-    app.mount("/", StaticFiles(directory=str(DIST_DIR), html=True), name="static")
-else:
-
-    @app.get("/")
-    def dev_hint():
-        return JSONResponse(
-            {
-                "message": "Frontend belum di-build.",
-                "petunjuk_dev": "Jalankan Vite: cd frontend && npm install && npm run dev",
-                "petunjuk_produksi": "Build dulu: cd frontend && npm run build, lalu restart server ini.",
-                "api_docs": "/docs",
-            }
-        )
+@app.get("/")
+def dev_hint():
+    return JSONResponse(
+        {
+            "message": "API Koperasi aktif.",
+            "petunjuk": "Gunakan frontend Vercel untuk mengakses sistem.",
+            "api_docs": "/docs",
+        }
+    )

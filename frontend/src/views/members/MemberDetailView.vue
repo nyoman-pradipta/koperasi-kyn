@@ -117,8 +117,8 @@ onMounted(load)
 
           <div v-if="member.ktp_photo_path" class="ktp-wrap">
             <p class="ktp-label">Foto KTP</p>
-            <a :href="'/' + member.ktp_photo_path" target="_blank">
-              <img :src="'/' + member.ktp_photo_path" class="ktp-img" alt="Foto KTP" />
+            <a :href="member.ktp_photo_path.startsWith('http') ? member.ktp_photo_path : '/' + member.ktp_photo_path" target="_blank">
+              <img :src="member.ktp_photo_path.startsWith('http') ? member.ktp_photo_path : '/' + member.ktp_photo_path" class="ktp-img" alt="Foto KTP" />
             </a>
           </div>
         </section>

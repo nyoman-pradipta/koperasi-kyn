@@ -188,16 +188,16 @@ def archive_member(member_id: int, db: Session = Depends(get_db)):
     return _to_out(m, db)
 
 
+from ..services.storage import upload_file
+
 @router.post("/{member_id}/ktp", response_model=MemberOut)
 async def upload_ktp(member_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     m = db.get(Member, member_id)
     if not m or m.is_deleted:
         raise HTTPException(404, detail="Anggota tidak ditemukan")
-    KTP_DIR.mkdir(parents=True, exist_ok=True)
-    ext = Path(file.filename or "").suffix or ".jpg"
-    dest = KTP_DIR / f"member_{member_id}{ext}"
-    dest.write_bytes(await file.read())
-    m.ktp_photo_path = f"uploads/ktp/{dest.name}"
+    
+    file_url = upload_file(file, "ktp")
+    m.ktp_photo_path = file_url
     db.commit()
     db.refresh(m)
     return _to_out(m, db)

@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-// baseURL '/api' → same-origin di produksi; saat dev di-proxy Vite ke :8001.
+// baseURL mengambil dari ENV, jika kosong (local dev) pakai '/api'
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 

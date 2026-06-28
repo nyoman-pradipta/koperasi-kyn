@@ -144,7 +144,8 @@ function lihatDoc(doc) {
     previewFile.value = doc
     zoomLevel.value   = 1
   } else {
-    window.open('/' + doc.file_path, '_blank')
+    const url = doc.file_path.startsWith('http') ? doc.file_path : '/' + doc.file_path
+    window.open(url, '_blank')
   }
 }
 
@@ -435,7 +436,7 @@ onMounted(load)
               <td>{{ h.return_notes || '—' }}</td>
               <td>
                 <div v-if="h.return_proof_path" class="doc-actions" style="justify-content:flex-start">
-                  <a :href="'/' + h.return_proof_path" target="_blank" class="doc-btn lihat-btn">Lihat</a>
+                  <a :href="h.return_proof_path.startsWith('http') ? h.return_proof_path : '/' + h.return_proof_path" target="_blank" class="doc-btn lihat-btn">Lihat</a>
                 </div>
                 <span v-else class="text-muted">—</span>
               </td>
@@ -570,7 +571,7 @@ onMounted(load)
         </div>
         <div class="img-viewport">
           <img
-            :src="'/' + previewFile.file_path"
+            :src="previewFile.file_path.startsWith('http') ? previewFile.file_path : '/' + previewFile.file_path"
             :alt="previewFile.file_name"
             :style="{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }"
             class="preview-img"
