@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import InstallmentSchedule, Loan, Member, Setting
+from ..models import InstallmentSchedule, Loan, Member, Setting, ReminderLog
 from ..services.security import current_user_id_ctx
 
 router = APIRouter(prefix="/api/reminders", tags=["reminders"])
@@ -133,10 +133,14 @@ def log_reminder(
 ):
     """Catat bahwa pengingat WhatsApp sudah dikirim."""
     uid = current_user_id_ctx.get(None)
-    db.execute(
-        text("""INSERT INTO reminder_logs (schedule_id, member_id, loan_id, channel, phone, sent_by)
-                VALUES (:sid, :mid, :lid, 'whatsapp', :phone, :uid)"""),
-        {"sid": schedule_id, "mid": member_id, "lid": loan_id, "phone": phone, "uid": uid},
+    log_entry = ReminderLog(
+        schedule_id=schedule_id,
+        member_id=member_id,
+        loan_id=loan_id,
+        channel="whatsapp",
+        phone=phone,
+        sent_by=uid
     )
+    db.add(log_entry)
     db.commit()
     return {"ok": True, "sent_at": datetime.utcnow().isoformat()}
