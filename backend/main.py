@@ -11,7 +11,7 @@ from pathlib import Path
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
+
 from sqlalchemy.orm import Session
 
 from .calculations import simulate_credit
@@ -40,7 +40,8 @@ from .services.security import current_user_id_ctx
 AUTH_WHITELIST = {"/api/health", "/api/auth/login"}
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-UPLOADS_DIR = PROJECT_ROOT / "uploads"
+# Vercel serverless = read-only filesystem, gunakan /tmp
+UPLOADS_DIR = Path("/tmp/uploads")
 
 
 @asynccontextmanager
@@ -142,9 +143,8 @@ app.include_router(reminders.router)
 
 
 # ------------------- File upload (KTP/dokumen) -----------------------------
-
+# Upload file sekarang via Cloudinary, folder /tmp/uploads hanya untuk sementara
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 
 # ------------------- Root Endpoint ----------------------------
