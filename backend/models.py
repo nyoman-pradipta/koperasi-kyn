@@ -392,3 +392,16 @@ class SimulationLog(Base):
     total_fees = Column(Integer, nullable=False)
     net_received = Column(Integer, nullable=False)
     total_payable = Column(Integer, nullable=False)
+
+
+class ReminderLog(Base):
+    __tablename__ = "reminder_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    schedule_id = Column(Integer, ForeignKey("installment_schedule.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
+    loan_id = Column(Integer, ForeignKey("loans.id"), nullable=False)
+    channel = Column(String, default="whatsapp")
+    phone = Column(String, nullable=True)
+    sent_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    sent_at = Column(DateTime, default=datetime.utcnow, nullable=False)
