@@ -74,6 +74,9 @@ app.add_middleware(
 async def auth_guard(request, call_next):
     """Wajibkan token Bearer untuk /api/* (kecuali whitelist) & set context
     petugas yang sedang login."""
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
     path = request.url.path
     if path.startswith("/api") and path not in AUTH_WHITELIST:
         header = request.headers.get("authorization", "")
