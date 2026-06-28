@@ -61,7 +61,8 @@ async function send(item) {
       {}
     )
   } catch (err) {
-    ui.notify(`Log gagal: ${err.message}`, 'error')
+    const msg = err.response?.data?.detail || err.message
+    ui.notify(`Log gagal: ${msg}`, 'error')
   }
 }
 

@@ -141,6 +141,12 @@ def log_reminder(
         phone=phone,
         sent_by=uid
     )
-    db.add(log_entry)
-    db.commit()
+    try:
+        db.add(log_entry)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=f"DB Error: {str(e)}")
+
     return {"ok": True, "sent_at": datetime.utcnow().isoformat()}
